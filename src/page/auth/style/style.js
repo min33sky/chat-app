@@ -67,7 +67,7 @@ export const FormWrapper = styled.div`
 
   button[type='submit'],
   input[type='submit'] {
-    background: #9d42ed;
+    background: rgba(155, 89, 182, 0.9);
     color: white;
     text-transform: uppercase;
     border: none;
@@ -76,11 +76,12 @@ export const FormWrapper = styled.div`
     font-size: 16px;
     font-weight: 100;
     letter-spacing: 10px;
+    transition: all 0.3s;
   }
 
   button[type='submit']:hover,
   input[type='submit']:hover {
-    background: #8c27e6;
+    background: rgba(155, 89, 182, 1);
   }
 
   button[type='submit']:active,

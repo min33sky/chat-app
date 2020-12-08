@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import Form from './components/Form';
 import firebase from './../../firebase';
-import md5 from 'md5';
+import md5 from 'md5'; // return unique value
 
 /**
  * 회원 가입 페이지
@@ -19,13 +19,23 @@ export default function Register() {
   const onSubmit = async data => {
     try {
       setLoading(true);
+      // 1. 인증 서비스에 계정 생성
       let createdUser = await firebase
         .auth()
         .createUserWithEmailAndPassword(data.email, data.password);
+
+      // 2. 계정 정보 업데이트
       await createdUser.user.updateProfile({
         displayName: data.name,
         photoURL: `http://gravatar.com/avatar/${md5(createdUser.user.email)}?d=identicon`,
       });
+
+      // 3. Firebase DB에 저장
+      await firebase.database().ref('users').child(createdUser.user.uid).set({
+        name: createdUser.user.displayName,
+        image: createdUser.user.photoURL,
+      });
+
       console.log('createdUser', createdUser);
       setLoading(false);
     } catch (error) {
