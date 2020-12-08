@@ -15,7 +15,6 @@ export default function Login() {
 
   const onSubmit = async data => {
     try {
-      // 로그인
       setLoading(true);
 
       await firebase.auth().signInWithEmailAndPassword(data.email, data.password);
@@ -60,7 +59,7 @@ export default function Login() {
           })}
         />
         {errors.password && errors.password.type === 'required' && <p>필수 항목입니다.</p>}
-        {errorFromFirebase && <p>errorFromFirebase</p>}
+        {errorFromFirebase && <p>{errorFromFirebase}</p>}
 
         <input type='submit' disabled={loading} value='로그인' />
       </form>

@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import firebase from './firebase';
 import { useDispatch, useSelector } from 'react-redux';
 import { Actions as AuthActions } from './page/auth/state';
+import Loader from './common/components/Loader';
 
 function App() {
   const history = useHistory();
@@ -15,18 +16,24 @@ function App() {
 
   useEffect(() => {
     firebase.auth().onAuthStateChanged(user => {
-      console.log('user', user);
       if (user) {
-        history.push('/');
         dispatch(AuthActions.setAuth(user));
+        history.push('/');
       } else {
+        dispatch(AuthActions.clearAuth());
         history.push('/login');
       }
     });
-  }, [history, dispatch]);
+  });
 
   if (isLoading) {
-    return <div>로딩중</div>;
+    return (
+      <div
+        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
+      >
+        <Loader />
+      </div>
+    );
   } else {
     return (
       <Switch>
