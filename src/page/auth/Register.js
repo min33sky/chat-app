@@ -1,36 +1,99 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import Form from './components/Form';
+import firebase from './../../firebase';
+import md5 from 'md5';
 
 /**
  * 회원 가입 페이지
  */
 export default function Register() {
   const { register, handleSubmit, watch, errors } = useForm();
-  const onSubmit = data => {
-    console.log(data);
+  const [errorFromFirebase, setErrorFromFirebase] = useState('');
+  const [loading, setLoading] = useState(false);
+  const password = useRef();
+  const timerId = useRef(null);
+  password.current = watch('password'); // 패스워드 비교를 위해
+
+  const onSubmit = async data => {
+    try {
+      setLoading(true);
+      let createdUser = await firebase
+        .auth()
+        .createUserWithEmailAndPassword(data.email, data.password);
+      await createdUser.user.updateProfile({
+        displayName: data.name,
+        photoURL: `http://gravatar.com/avatar/${md5(createdUser.user.email)}?d=identicon`,
+      });
+      console.log('createdUser', createdUser);
+      setLoading(false);
+    } catch (error) {
+      setErrorFromFirebase(error.message);
+      setLoading(false);
+      timerId.current = setTimeout(() => {
+        setErrorFromFirebase('');
+      }, 5000);
+    }
   }; // your form submit function which will invoke after successful validation
 
-  console.log(watch('example')); // you can watch individual input by pass the name of the input
+  useEffect(() => {
+    return () => {
+      clearTimeout(timerId.current);
+    };
+  }, []);
+
+  // console.log(watch('email')); // you can watch individual input by pass the name of the input
 
   return (
     <Form label='Register'>
       <form onSubmit={handleSubmit(onSubmit)}>
         <label>email</label>
-        <input name='email' type='email' defaultValue='test' ref={register} />
-        <label>name</label>
-        <input name='name' defaultValue='test' ref={register} />
-        <label>password</label>
-        <input name='password' type='password' ref={register} />
-        <label>passwordRequired</label>
         <input
-          name='passwordRequired'
-          type='password'
+          name='email'
+          type='email'
+          placeholder='이메일 주소를 적으세요!'
+          ref={register({ required: true, pattern: /^\S+@\S+$/i })}
+        />
+        {errors.email && <p>This field is required</p>}
+
+        <label>name</label>
+        <input
+          name='name'
+          placeholder='10자리까지 가능합니다.'
           ref={register({ required: true, maxLength: 10 })}
         />
-        {errors.exampleRequired && <p>This field is required</p>}
-        <input type='submit' value='회원 가입' />
+        {errors.name && errors.name.type === 'required' && <p>This name field is required</p>}
+        {errors.name && errors.name.type === 'maxLength' && <p>Your input exceed maxinum length</p>}
+
+        <label>password</label>
+        <input
+          name='password'
+          type='password'
+          placeholder='최소 6자리 입력하세요!'
+          ref={register({ required: true, minLength: 6 })}
+        />
+        {errors.password && errors.password.type === 'required' && <p>This field is required</p>}
+        {errors.password && errors.password.type === 'minLength' && (
+          <p>Password must have at least 6 characters</p>
+        )}
+
+        <label>passwordConfirm</label>
+        <input
+          name='passwordConfirm'
+          type='password'
+          placeholder='비밀번호를 다시 입력하세요!'
+          ref={register({ required: true, validate: value => value === password.current })}
+        />
+        {errors.passwordConfirm && errors.passwordConfirm.type === 'required' && (
+          <p>This field is required</p>
+        )}
+        {errors.passwordConfirm && errors.passwordConfirm.type === 'validate' && (
+          <p>Password do not match</p>
+        )}
+        {errorFromFirebase && <p>{errorFromFirebase}</p>}
+
+        <input type='submit' disabled={loading} value='회원 가입' />
       </form>
 
       <div>
