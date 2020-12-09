@@ -1,36 +1,28 @@
 import React from 'react';
-import { Route, Switch, useHistory } from 'react-router-dom';
+import { Route, Switch } from 'react-router-dom';
 import Chat from './page/chat/Chat';
 import Login from './page/auth/Login';
 import Register from './page/auth/Register';
-import { useEffect } from 'react';
-import firebase from './firebase';
-import { useDispatch, useSelector } from 'react-redux';
-import { Actions as AuthActions } from './page/auth/state';
+import { useSelector } from 'react-redux';
 import Loader from './common/components/Loader';
+import useAuthCheck from './common/hooks/useAuthCheck';
+
+const loaderStyle = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: '100vh',
+};
 
 function App() {
-  const history = useHistory();
-  const dispatch = useDispatch();
-  const isLoading = useSelector(state => state.auth.isLoading);
+  // 인증 상태 감시 Hook
+  useAuthCheck();
 
-  useEffect(() => {
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        dispatch(AuthActions.setAuth(user));
-        history.push('/');
-      } else {
-        dispatch(AuthActions.clearAuth());
-        history.push('/login');
-      }
-    });
-  });
+  const isLoading = useSelector(state => state.auth.isLoading);
 
   if (isLoading) {
     return (
-      <div
-        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
-      >
+      <div style={loaderStyle}>
         <Loader />
       </div>
     );
