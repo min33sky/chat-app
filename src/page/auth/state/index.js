@@ -27,8 +27,9 @@ const INITIAL_STATE = {
 
 /**
  * 인증 관련 리듀서
+ *
  * ? 파이어베이스에서 응답하는 객체가 특수객체라
- * ? 에러가 발생해서 순수 리듀서로 변경했다.
+ * ? immer에서 에러가 발생해서 순수 리듀서로 변경했다.
  * @param {object} state 상태
  * @param {object} action 액션 객체
  */

@@ -25,6 +25,9 @@ export default function UserPanel() {
 
   // 이미지 업로드 핸들러
   const handleUploadImage = async e => {
+    /**
+     * TODO: 로딩 표시 추가하는게 좋을 듯?
+     */
     const file = e.target.files[0];
     if (!file) return;
 
