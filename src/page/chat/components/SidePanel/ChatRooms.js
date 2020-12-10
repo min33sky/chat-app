@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import { FaRegSmileWink, FaPlus } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
-import firebase from '../../../../firebase';
 import { Actions } from '../../state';
+import useChatRoomsObserver from './../../hooks/useChatRoomsObserver';
 
 /**
  * 채팅방 생성 컴포넌트
@@ -13,9 +13,8 @@ export default function ChatRooms() {
   const [name, setName] = useState(''); // 채팅방 이름
   const [description, setDescription] = useState(''); // 채팅방 설명
 
-  // 모달 가시성 부분
+  // 모달 상태
   const [show, setShow] = useState(false);
-
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
@@ -30,11 +29,11 @@ export default function ChatRooms() {
   // 채팅방 생성 관련
   const displayName = useSelector(state => state.auth.currentUser?.displayName);
   const photoURL = useSelector(state => state.auth.currentUser?.photoURL);
-  const chatRoomsRef = useRef(null);
-  chatRoomsRef.current = firebase.database().ref('chatRooms');
+  const [chatRoomsRef, chatRooms, activeChatRoomId, setActiveChatRoomId] = useChatRoomsObserver();
 
+  // 채팅방 생성
   const addChatRoom = async () => {
-    const key = await chatRoomsRef.current.push().key; // firebase에서 unique key값 발급
+    const key = await chatRoomsRef.push().key; // firebase에서 unique key값 발급
     const newChatRoom = {
       id: key,
       name,
@@ -46,7 +45,7 @@ export default function ChatRooms() {
     };
 
     try {
-      await chatRoomsRef.current.child(key).update(newChatRoom);
+      await chatRoomsRef.child(key).update(newChatRoom);
       setName('');
       setDescription('');
       setShow(false);
@@ -55,35 +54,8 @@ export default function ChatRooms() {
     }
   };
 
-  // 채팅방 생성 이후 채팅방 목록 업데이트 관련
-  const [chatRooms, setChatRooms] = useState([]);
-  const [firstLoad, setFirstLoad] = useState(true);
-  const [activeChatRoomId, setActiveChatRoomId] = useState('');
-  const setFirstChatRoom = useCallback(() => {
-    if (firstLoad && chatRooms.length > 0) {
-      dispatch(Actions.setCurrentChatRoom(chatRooms[0]));
-      setActiveChatRoomId(chatRooms[0].id);
-      setFirstLoad(false);
-    }
-  }, [chatRooms, dispatch, firstLoad]);
-
-  useEffect(() => {
-    let chatRoomsArray = [];
-    // Firebase의 Listener가 채팅방이 생성되는 것을 알려준다.
-    chatRoomsRef.current.on('child_added', DataSnapshot => {
-      chatRoomsArray.push(DataSnapshot.val());
-      // console.log('chatRoomsArray', chatRoomsArray);
-      setChatRooms(chatRoomsArray);
-    });
-    console.log('chat useEffect - 1');
-  }, [chatRooms.length]); //? 채팅방의 개수가 늘어날 때마다 리랜더링
-
-  useEffect(() => {
-    setFirstChatRoom();
-    console.log('chat useEffect - 2');
-  }, [setFirstChatRoom]);
-
-  const renderChatRooms = chatRooms => {
+  // 채팅방 목록을 랜더링
+  const renderChatRoomsList = chatRooms => {
     return (
       chatRooms.length > 0 &&
       chatRooms.map(chatRoom => (
@@ -101,6 +73,7 @@ export default function ChatRooms() {
     );
   };
 
+  // 채팅방 변경 핸들러
   const changeChatRoom = chatRoom => {
     dispatch(Actions.setCurrentChatRoom(chatRoom));
     setActiveChatRoomId(chatRoom.id);
@@ -118,7 +91,9 @@ export default function ChatRooms() {
           onClick={handleShow}
         />
       </div>
-      <ul style={{ listStyleType: 'none', padding: 0 }}>{renderChatRooms(chatRooms)}</ul>
+      <ul style={{ listStyleType: 'none', padding: 0, marginTop: 4 }}>
+        {renderChatRoomsList(chatRooms)}
+      </ul>
 
       {/* findDOMNode 경고를 없애기 위해서 animation을 false로 설정 */}
       <Modal show={show} onHide={handleClose} animation={false}>
