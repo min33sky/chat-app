@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import { FaRegSmileWink, FaPlus } from 'react-icons/fa';
 import { useSelector } from 'react-redux';
@@ -51,6 +51,30 @@ export default function ChatRooms() {
     }
   };
 
+  // 채팅방 생성 이후 업데이트 관련
+  const [chatRooms, setChatRooms] = useState([]);
+
+  useEffect(() => {
+    let chatRoomsArray = [];
+    // Firebase의 Listener가 채팅방이 생성되는 것을 알려준다.
+    chatRoomsRef.current.on('child_added', DataSnapshot => {
+      chatRoomsArray.push(DataSnapshot.val());
+      console.log('chatRoomsArray', chatRoomsArray);
+      setChatRooms(chatRoomsArray);
+    });
+  }, [chatRooms.length]); // 채팅방의 개수가 늘어날 때마다 리랜더링
+
+  const renderChatRooms = chatRooms => {
+    return (
+      chatRooms.length > 0 &&
+      chatRooms.map(chatRoom => (
+        <li key={chatRoom.id} onClick={() => alert('준비중...')}>
+          #{chatRoom.name}
+        </li>
+      ))
+    );
+  };
+
   return (
     <div>
       <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
@@ -61,6 +85,7 @@ export default function ChatRooms() {
           onClick={handleShow}
         />
       </div>
+      <ul style={{ listStyleType: 'none', padding: 0 }}>{renderChatRooms(chatRooms)}</ul>
 
       {/* findDOMNode 경고를 없애기 위해서 animation을 false로 설정 */}
       <Modal show={show} onHide={handleClose} animation={false}>
