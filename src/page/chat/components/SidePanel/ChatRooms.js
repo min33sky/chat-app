@@ -1,21 +1,25 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
 import { FaRegSmileWink, FaPlus } from 'react-icons/fa';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import firebase from '../../../../firebase';
+import { Actions } from '../../state';
 
 /**
  * 채팅방 생성 컴포넌트
  */
 export default function ChatRooms() {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const dispatch = useDispatch();
+  const [name, setName] = useState(''); // 채팅방 이름
+  const [description, setDescription] = useState(''); // 채팅방 설명
 
+  // 모달 가시성 부분
   const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
+  // 채팅창 생성 버튼 핸들러
   const handleSubmit = e => {
     e.preventDefault();
     if (isFormValid(name, description)) addChatRoom();
@@ -51,29 +55,58 @@ export default function ChatRooms() {
     }
   };
 
-  // 채팅방 생성 이후 업데이트 관련
+  // 채팅방 생성 이후 채팅방 목록 업데이트 관련
   const [chatRooms, setChatRooms] = useState([]);
+  const [firstLoad, setFirstLoad] = useState(true);
+  const [activeChatRoomId, setActiveChatRoomId] = useState('');
+  const setFirstChatRoom = useCallback(() => {
+    if (firstLoad && chatRooms.length > 0) {
+      dispatch(Actions.setCurrentChatRoom(chatRooms[0]));
+      setActiveChatRoomId(chatRooms[0].id);
+      setFirstLoad(false);
+    }
+  }, [chatRooms, dispatch, firstLoad]);
 
   useEffect(() => {
     let chatRoomsArray = [];
     // Firebase의 Listener가 채팅방이 생성되는 것을 알려준다.
     chatRoomsRef.current.on('child_added', DataSnapshot => {
       chatRoomsArray.push(DataSnapshot.val());
-      console.log('chatRoomsArray', chatRoomsArray);
+      // console.log('chatRoomsArray', chatRoomsArray);
       setChatRooms(chatRoomsArray);
     });
-  }, [chatRooms.length]); // 채팅방의 개수가 늘어날 때마다 리랜더링
+    console.log('chat useEffect - 1');
+  }, [chatRooms.length]); //? 채팅방의 개수가 늘어날 때마다 리랜더링
+
+  useEffect(() => {
+    setFirstChatRoom();
+    console.log('chat useEffect - 2');
+  }, [setFirstChatRoom]);
 
   const renderChatRooms = chatRooms => {
     return (
       chatRooms.length > 0 &&
       chatRooms.map(chatRoom => (
-        <li key={chatRoom.id} onClick={() => alert('준비중...')}>
-          #{chatRoom.name}
+        <li
+          key={chatRoom.id}
+          style={{
+            backgroundColor: chatRoom.id === activeChatRoomId && '#ffffff45',
+            cursor: 'pointer',
+          }}
+          onClick={() => changeChatRoom(chatRoom)}
+        >
+          # {chatRoom.name}
         </li>
       ))
     );
   };
+
+  const changeChatRoom = chatRoom => {
+    dispatch(Actions.setCurrentChatRoom(chatRoom));
+    setActiveChatRoomId(chatRoom.id);
+  };
+
+  // --------------------------------------------------- Render ------------------------------------------ //
 
   return (
     <div>
