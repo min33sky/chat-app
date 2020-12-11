@@ -10,6 +10,8 @@ import useChatRoomsObserver from './../../hooks/useChatRoomsObserver';
  */
 export default function ChatRooms() {
   const dispatch = useDispatch();
+
+  // 채팅방 생성 상태
   const [name, setName] = useState(''); // 채팅방 이름
   const [description, setDescription] = useState(''); // 채팅방 설명
 
@@ -18,6 +20,11 @@ export default function ChatRooms() {
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
+  // 채팅방 생성 관련
+  const displayName = useSelector(state => state.auth.currentUser?.displayName);
+  const photoURL = useSelector(state => state.auth.currentUser?.photoURL);
+  const [chatRoomsRef, chatRooms, activeChatRoomId, setActiveChatRoomId] = useChatRoomsObserver();
+
   // 채팅창 생성 버튼 핸들러
   const handleSubmit = e => {
     e.preventDefault();
@@ -25,11 +32,6 @@ export default function ChatRooms() {
   };
 
   const isFormValid = (name, description) => name && description;
-
-  // 채팅방 생성 관련
-  const displayName = useSelector(state => state.auth.currentUser?.displayName);
-  const photoURL = useSelector(state => state.auth.currentUser?.photoURL);
-  const [chatRoomsRef, chatRooms, activeChatRoomId, setActiveChatRoomId] = useChatRoomsObserver();
 
   // 채팅방 생성
   const addChatRoom = async () => {

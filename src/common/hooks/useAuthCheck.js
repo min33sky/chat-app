@@ -12,7 +12,7 @@ export default function useAuthCheck() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // ? observer를 통해서 인증 상태를 감시한다.
+    // ? firebase의 observer를 통해서 인증 상태를 감시한다.
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         dispatch(AuthActions.setAuth(user));
