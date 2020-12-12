@@ -47,7 +47,7 @@ export default function useChatRoomsObserver() {
   useEffect(() => {
     return () => {
       console.log('Remove chatRoomsRef Listener');
-      chatRoomsRef.current.off();
+      chatRoomsRef.current.off(); // 파이어베이스 리스너 제거
     };
   }, []);
 
