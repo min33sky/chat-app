@@ -11,12 +11,15 @@ dayjs.locale('ko'); // 한국
 /**
  * 채팅 메세지 컴포넌트
  * @param {object} param
- * @param {object} param.message  메세지
+ * @param {object} param.message  채팅 메세지
  * @param {object} param.user 현재 로그인 한 유저
  */
 export default function Message({ message, user }) {
+  // 채팅 메세지가 이미지인지 일반 텍스트인지 확인
+  const isImage = message => message.hasOwnProperty('image') && !message.hasOwnProperty('content');
+
   return (
-    <div>
+    <>
       <Media style={{ marginBottom: 10 }}>
         <img
           width={64}
@@ -34,14 +37,19 @@ export default function Message({ message, user }) {
         >
           <h6>
             {message.user.name}
+
             <span style={{ marginLeft: 5, fontSize: '0.7em', color: 'gray' }}>
               {dayjs(message.timestamp).fromNow()}
             </span>
           </h6>
 
-          <p>{message.content}</p>
+          {isImage(message) ? (
+            <img style={{ maxWidth: 300 }} src={message.image} alt='uploadImage' />
+          ) : (
+            <p>{message.content}</p>
+          )}
         </Media.Body>
       </Media>
-    </div>
+    </>
   );
 }

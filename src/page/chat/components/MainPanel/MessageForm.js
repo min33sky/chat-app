@@ -14,6 +14,8 @@ export default function MessageForm() {
   const displayName = useSelector(state => state.auth.currentUser?.displayName);
   const photoURL = useSelector(state => state.auth.currentUser?.photoURL);
 
+  const [percentage, setPercentage] = useState(0); // 이미지 전송 상태
+
   const inputOpenImageRef = useRef(null); // 이미지 업로드 버튼 Ref
 
   const messagesRef = firebase.database().ref('messages'); // firebase DB의 messages 컬렉션
@@ -71,7 +73,7 @@ export default function MessageForm() {
   };
 
   // 이미지 업로드 핸들러
-  const handleUploadImage = async e => {
+  const handleUploadImage = e => {
     const file = e.target.files[0];
     console.log(file);
     if (!file) return;
@@ -79,8 +81,36 @@ export default function MessageForm() {
     const filePath = `message/public/${file.name}`;
     const metadata = { contentType: `${file.type}` };
 
+    setLoading(true);
+
     try {
-      await storageRef.child(filePath).put(file, metadata);
+      // 파일을 먼저 스토리지에 저장
+      const uploadTask = storageRef.child(filePath).put(file, metadata);
+
+      // 리스너를 통해서 전송 상태를 확인한다.
+      uploadTask.on(
+        'state_changed',
+        UploadTaskSnapshot => {
+          const percentage = Math.round(
+            (UploadTaskSnapshot.bytesTransferred / UploadTaskSnapshot.totalBytes) * 100,
+          );
+          // 상태값 저장
+          setPercentage(percentage);
+        },
+        err => {
+          setLoading(false);
+          console.error(err);
+        },
+        () => {
+          // 저장이 다 된 후에 파일 메세지 전송
+          // 저장된 파일을 다운로드 받을 수 있는 URL 가져오기
+          uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+            // message collection에 파일 데이터 저장하기
+            messagesRef.child(chatRoomId).push().set(createMessage(downloadURL));
+            setLoading(false);
+          });
+        },
+      );
 
       console.log('Image Upload Complete.......');
     } catch (error) {
@@ -96,7 +126,9 @@ export default function MessageForm() {
         </Form.Group>
       </Form>
 
-      <ProgressBar animated now={60} label='60%' />
+      {!(percentage === 0 || percentage === 100) && (
+        <ProgressBar animated variant='success' now={percentage} label={percentage} />
+      )}
 
       {errors && <p style={{ color: 'red' }}>{errors}</p>}
 
