@@ -44,6 +44,7 @@ export default function MainPanel() {
   return (
     <div style={{ padding: '2rem 2rem 0 2rem' }}>
       <MessageHeader />
+
       <div
         style={{
           width: '100%',
@@ -57,6 +58,7 @@ export default function MainPanel() {
       >
         {renderMessages(messages)}
       </div>
+
       <MessageForm />
     </div>
   );

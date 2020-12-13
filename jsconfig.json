@@ -4,5 +4,6 @@
     "target": "esnext",
     "checkJs": true,
     "jsx": "react"
-  }
+  },
+  "exclude": ["./node_modules"]
 }
