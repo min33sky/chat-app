@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Col, Form, ProgressBar, Row } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { Button } from '../../style/Button';
@@ -14,7 +14,10 @@ export default function MessageForm() {
   const displayName = useSelector(state => state.auth.currentUser?.displayName);
   const photoURL = useSelector(state => state.auth.currentUser?.photoURL);
 
+  const inputOpenImageRef = useRef(null); // 이미지 업로드 버튼 Ref
+
   const messagesRef = firebase.database().ref('messages'); // firebase DB의 messages 컬렉션
+  const storageRef = firebase.storage().ref(); // firebase Storage
 
   const handleChange = e => {
     setContent(e.target.value);
@@ -60,11 +63,35 @@ export default function MessageForm() {
     }
   };
 
+  // 업로드 버튼 클릭 핸들러
+  const handleUploadImageButton = () => {
+    if (inputOpenImageRef) {
+      inputOpenImageRef.current.click();
+    }
+  };
+
+  // 이미지 업로드 핸들러
+  const handleUploadImage = async e => {
+    const file = e.target.files[0];
+    console.log(file);
+    if (!file) return;
+
+    const filePath = `message/public/${file.name}`;
+    const metadata = { contentType: `${file.type}` };
+
+    try {
+      await storageRef.child(filePath).put(file, metadata);
+
+      console.log('Image Upload Complete.......');
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <>
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId='exampleForm.ControlTextarea1'>
-          <Form.Label>Example textarea</Form.Label>
           <Form.Control as='textarea' rows={3} value={content} onChange={handleChange} />
         </Form.Group>
       </Form>
@@ -80,11 +107,19 @@ export default function MessageForm() {
           </Button>
         </Col>
         <Col>
-          <Button onClick={() => alert('준비중')} disabled={loading}>
+          <Button onClick={handleUploadImageButton} disabled={loading}>
             이미지 업로드
           </Button>
         </Col>
       </Row>
+
+      <input
+        type='file'
+        ref={inputOpenImageRef}
+        accept='image/jpeg, image/png'
+        onChange={handleUploadImage}
+        style={{ display: 'none' }}
+      />
     </>
   );
 }

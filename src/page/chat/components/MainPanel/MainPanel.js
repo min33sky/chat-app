@@ -4,6 +4,7 @@ import MessageHeader from './MessageHeader';
 import firebase from './../../../../firebase';
 import { useSelector } from 'react-redux';
 import Message from './Message';
+import { MessagesContainer } from './../../style/MessagesContainer';
 
 export default function MainPanel() {
   const messageRef = useRef(null);
@@ -45,19 +46,7 @@ export default function MainPanel() {
     <div style={{ padding: '2rem 2rem 0 2rem' }}>
       <MessageHeader />
 
-      <div
-        style={{
-          width: '100%',
-          height: '450px',
-          border: '.2rem solid #ececec',
-          borderRadius: '4px',
-          padding: '1rem',
-          marginBottom: '1rem',
-          overflowY: 'auto',
-        }}
-      >
-        {renderMessages(messages)}
-      </div>
+      <MessagesContainer>{renderMessages(messages)}</MessagesContainer>
 
       <MessageForm />
     </div>
