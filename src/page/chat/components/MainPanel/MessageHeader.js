@@ -9,16 +9,20 @@ import {
   InputGroup,
   Row,
 } from 'react-bootstrap';
-import { FaLock } from 'react-icons/fa';
+import { FaLock, FaLockOpen } from 'react-icons/fa';
 import { MdFavoriteBorder } from 'react-icons/md';
 import { AiOutlineSearch } from 'react-icons/ai';
+import { useSelector } from 'react-redux';
 
 /**
  * 채팅방 헤더 컴포넌트
  * @param {object} param
- * @param {() => void} param.onChange 검색창 랜들러
+ * @param {() => void} param.onChange 검색창 핸들러
  */
 export default function MessageHeader({ onChange }) {
+  const chatRoomName = useSelector(state => state.chatRoom.currentChatRoom?.name);
+  const isPrivateChatRoom = useSelector(state => state.chatRoom?.isPrivateChatRoom);
+
   return (
     <div
       style={{
@@ -33,7 +37,7 @@ export default function MessageHeader({ onChange }) {
         <Row>
           <Col>
             <h2 style={{ display: 'flex', alignItems: 'center' }}>
-              <FaLock /> ChatRoomName <MdFavoriteBorder />
+              {isPrivateChatRoom ? <FaLock /> : <FaLockOpen />} {chatRoomName} <MdFavoriteBorder />
             </h2>
           </Col>
           <Col>

@@ -40,8 +40,8 @@ export default function MainPanel() {
 
   // ---------- 검색어 관련 ---------------------------------------------------------- //
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResult, setSearchResult] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(''); // 검색어
+  const [searchResult, setSearchResult] = useState([]); // 검색 결과
   const [searchLoading, setSearchLoading] = useState(false);
 
   // 검색창 이벤트 핸들러

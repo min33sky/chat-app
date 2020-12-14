@@ -10,6 +10,7 @@ export default function MessageForm() {
   const [errors, setErrors] = useState([]);
 
   const chatRoomId = useSelector(state => state.chatRoom.currentChatRoom?.id);
+  const isPrivateChatRoom = useSelector(state => state.chatRoom?.isPrivateChatRoom);
   const uid = useSelector(state => state.auth.currentUser?.uid);
   const displayName = useSelector(state => state.auth.currentUser?.displayName);
   const photoURL = useSelector(state => state.auth.currentUser?.photoURL);
@@ -72,13 +73,17 @@ export default function MessageForm() {
     }
   };
 
+  const getPath = () => {
+    return isPrivateChatRoom ? `/message/private/${chatRoomId}` : '/message/public';
+  };
+
   // 이미지 업로드 핸들러
   const handleUploadImage = e => {
     const file = e.target.files[0];
     console.log(file);
     if (!file) return;
 
-    const filePath = `message/public/${file.name}`;
+    const filePath = `${getPath()}/${file.name}`;
     const metadata = { contentType: `${file.type}` };
 
     setLoading(true);
