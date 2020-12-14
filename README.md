@@ -5,4 +5,6 @@
 ## 앱 구성
 
 - react
+- redux
+- styledComponents
 - firebase
