@@ -13,7 +13,12 @@ import { FaLock } from 'react-icons/fa';
 import { MdFavoriteBorder } from 'react-icons/md';
 import { AiOutlineSearch } from 'react-icons/ai';
 
-export default function MessageHeader() {
+/**
+ * 채팅방 헤더 컴포넌트
+ * @param {object} param
+ * @param {() => void} param.onChange 검색창 랜들러
+ */
+export default function MessageHeader({ onChange }) {
   return (
     <div
       style={{
@@ -39,6 +44,7 @@ export default function MessageHeader() {
                 </InputGroup.Text>
               </InputGroup.Prepend>
               <FormControl
+                onChange={onChange}
                 placeholder='Search Messages'
                 aria-label='Search'
                 aria-describedby='basic-addon1'

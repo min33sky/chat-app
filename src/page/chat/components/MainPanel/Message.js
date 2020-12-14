@@ -18,6 +18,11 @@ export default function Message({ message, user }) {
   // 채팅 메세지가 이미지인지 일반 텍스트인지 확인
   const isImage = message => message.hasOwnProperty('image') && !message.hasOwnProperty('content');
 
+  // if (!message.user) {
+  //   console.log('없어');
+  //   return 'loading';
+  // }
+
   return (
     <>
       <Media style={{ marginBottom: 10 }}>
