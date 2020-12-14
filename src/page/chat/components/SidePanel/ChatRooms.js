@@ -77,6 +77,7 @@ export default function ChatRooms() {
 
   // 채팅방 변경 핸들러
   const changeChatRoom = chatRoom => {
+    dispatch(Actions.setPrivateChatRoom(false));
     dispatch(Actions.setCurrentChatRoom(chatRoom));
     setActiveChatRoomId(chatRoom.id);
   };
