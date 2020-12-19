@@ -28,7 +28,6 @@ export default function MainPanel() {
       // console.log('array :', messagesArray);
 
       setMessages(prev => [...messagesArray]);
-      console.log('채팅 메세지 랜더링');
     });
   }, []);
 
@@ -77,7 +76,6 @@ export default function MainPanel() {
 
   useEffect(() => {
     handleSearchMessages();
-    console.log('검색창 랜더링');
   }, [searchTerm, handleSearchMessages]);
 
   const renderMessages = messages =>

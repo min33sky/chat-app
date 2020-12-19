@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Form, Modal } from 'react-bootstrap';
+import { Badge, Button, Form, Modal } from 'react-bootstrap';
 import { FaRegSmileWink, FaPlus } from 'react-icons/fa';
 import { useDispatch, useSelector } from 'react-redux';
 import { Actions } from '../../state';
@@ -23,7 +23,13 @@ export default function ChatRooms() {
   // 채팅방 생성 관련
   const displayName = useSelector(state => state.auth.currentUser?.displayName);
   const photoURL = useSelector(state => state.auth.currentUser?.photoURL);
-  const [chatRoomsRef, chatRooms, activeChatRoomId, setActiveChatRoomId] = useChatRoomsObserver();
+  const {
+    chatRoomsRef,
+    chatRooms,
+    activeChatRoomId,
+    setActiveChatRoomId,
+    notifications,
+  } = useChatRoomsObserver();
 
   // 채팅창 생성 버튼 핸들러
   const handleSubmit = e => {
@@ -56,6 +62,18 @@ export default function ChatRooms() {
     }
   };
 
+  const getNotifications = chatRoom => {
+    let count = 0;
+
+    notifications.forEach(notification => {
+      if (notification.id === chatRoom.id) {
+        count = notification.count;
+      }
+    });
+
+    return count;
+  };
+
   // 채팅방 목록을 랜더링
   const renderChatRoomsList = chatRooms => {
     return (
@@ -70,6 +88,16 @@ export default function ChatRooms() {
           onClick={() => changeChatRoom(chatRoom)}
         >
           # {chatRoom.name}
+          <Badge
+            style={{
+              float: 'right',
+              marginTop: '4px',
+            }}
+            pill
+            variant='danger'
+          >
+            {getNotifications(chatRoom)}
+          </Badge>
         </li>
       ))
     );
