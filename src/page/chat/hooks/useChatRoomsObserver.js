@@ -112,10 +112,6 @@ export default function useChatRoomsObserver() {
     // console.log('chat useEffect - 2');
   }, [setFirstChatRoom]);
 
-  // useEffect(() => {
-  //   console.log('NOTIFICAtion이 변경되었다.');
-  // }, [notifications.length]);
-
   // 파이어베이스 리스너 제거
   useEffect(() => {
     return () => {
@@ -124,6 +120,23 @@ export default function useChatRoomsObserver() {
     };
   }, []);
 
+  // ! 채팅창 리스너 제거부분인데 정상 작동이 안됨
+  // const removeChatRoomsListener = useCallback(() => {
+  //   if (chatRooms) {
+  //     console.log('시발');
+  //     chatRooms.forEach(chatRoom => {
+  //       messagesRef.current.child(chatRoom.id).off();
+  //     });
+  //   }
+  // }, [chatRooms]);
+
+  // useEffect(() => {
+  //   return () => {
+  //     console.log('삭제');
+  //     removeChatRoomsListener();
+  //   };
+  // }, [removeChatRoomsListener]);
+
   // ? listener와 채팅방 목록, 현재 채팅방 관련 부분을 리턴해준다.
   return {
     chatRoomsRef: chatRoomsRef.current,
@@ -131,6 +144,7 @@ export default function useChatRoomsObserver() {
     activeChatRoomId,
     setActiveChatRoomId,
     notifications,
+    setNotifications,
     loading,
   };
 }

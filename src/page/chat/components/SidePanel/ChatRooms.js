@@ -29,6 +29,7 @@ export default function ChatRooms() {
     activeChatRoomId,
     setActiveChatRoomId,
     notifications,
+    setNotifications,
   } = useChatRoomsObserver();
 
   // 채팅창 생성 버튼 핸들러
@@ -62,6 +63,7 @@ export default function ChatRooms() {
     }
   };
 
+  // 메세지 개수 표시
   const getNotifications = chatRoom => {
     let count = 0;
 
@@ -71,7 +73,7 @@ export default function ChatRooms() {
       }
     });
 
-    return count;
+    if (count > 0) return count;
   };
 
   // 채팅방 목록을 랜더링
@@ -108,6 +110,20 @@ export default function ChatRooms() {
     dispatch(Actions.setPrivateChatRoom(false));
     dispatch(Actions.setCurrentChatRoom(chatRoom));
     setActiveChatRoomId(chatRoom.id);
+    clearNotification(chatRoom.id);
+  };
+
+  // 채팅방 알림 지우기
+  const clearNotification = chatRoomId => {
+    let index = notifications.findIndex(notification => notification.id === chatRoomId);
+
+    // 현재 채팅방에 메세지 알림이 있을 경우
+    if (index !== -1) {
+      let updateNotifications = [...notifications];
+      updateNotifications[index].lastKnownTotal = notifications[index].total;
+      updateNotifications[index].count = 0;
+      setNotifications(updateNotifications);
+    }
   };
 
   // --------------------------------------------------- Render ------------------------------------------ //
