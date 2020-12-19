@@ -18,6 +18,12 @@ export default function Message({ message, user }) {
   // 채팅 메세지가 이미지인지 일반 텍스트인지 확인
   const isImage = message => message.hasOwnProperty('image') && !message.hasOwnProperty('content');
 
+  const isMessageMine = (message, user) => {
+    if (user) {
+      return message.user.id === user.uid;
+    }
+  };
+
   return (
     <>
       <Media style={{ marginBottom: 10 }}>
@@ -32,7 +38,7 @@ export default function Message({ message, user }) {
         <Media.Body
           style={{
             paddingLeft: 4,
-            backgroundColor: `${message.user.id === user.uid && '#ececec'}`,
+            backgroundColor: `${isMessageMine(message, user) && '#ececec'}`,
           }}
         >
           <h6>
