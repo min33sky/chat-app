@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Accordion,
   Button,
@@ -10,9 +10,10 @@ import {
   Row,
 } from 'react-bootstrap';
 import { FaLock, FaLockOpen } from 'react-icons/fa';
-import { MdFavoriteBorder } from 'react-icons/md';
+import { MdFavoriteBorder, MdFavorite } from 'react-icons/md';
 import { AiOutlineSearch } from 'react-icons/ai';
 import { useSelector } from 'react-redux';
+import firebase from './../../../../firebase';
 
 /**
  * 채팅방 헤더 컴포넌트
@@ -20,8 +21,66 @@ import { useSelector } from 'react-redux';
  * @param {() => void} param.onChange 검색창 핸들러
  */
 export default function MessageHeader({ onChange }) {
-  const chatRoomName = useSelector(state => state.chatRoom.currentChatRoom?.name);
-  const isPrivateChatRoom = useSelector(state => state.chatRoom?.isPrivateChatRoom);
+  const isPrivateChatRoom = useSelector(state => state.chatRoom.isPrivateChatRoom);
+  const chatRoom = useSelector(state => state.chatRoom.currentChatRoom);
+  const user = useSelector(state => state.auth.currentUser);
+
+  const [isFavorited, setIsFavorited] = useState(false);
+
+  const usersRef = useRef(null);
+  usersRef.current = firebase.database().ref('users'); // firebase database users collections
+
+  useEffect(() => {
+    if (user && chatRoom) {
+      // console.log('user', user);
+      //       console.log('chatRoom', chatRoom);
+      addFavoriteListener(chatRoom.id, user.uid);
+    }
+  }, [user, chatRoom]);
+
+  // 좋아요 정보를 DB에서 가져오기
+  const addFavoriteListener = (chatRoomId, userId) => {
+    usersRef.current
+      .child(userId)
+      .child('favorited')
+      .once('value') // ? 한번만 발생하는 이벤트
+      .then(data => {
+        if (data.val()) {
+          const favoritedChatRooms = Object.keys(data.val()); // 좋아요를 누른 채팅방 ID들
+          const isAlreadyFavorited = favoritedChatRooms.includes(chatRoomId);
+          setIsFavorited(isAlreadyFavorited);
+        }
+      });
+  };
+
+  // 좋아요 아이콘 핸들러
+  const handleFavorite = () => {
+    if (isFavorited) {
+      usersRef.current
+        .child(`${user.uid}/favorited`)
+        .child(chatRoom.id)
+        .remove(err => {
+          if (err) {
+            console.error(err);
+          }
+        });
+      setIsFavorited(prev => !prev);
+    } else {
+      usersRef.current.child(`${user.uid}/favorited`).update({
+        [chatRoom.id]: {
+          name: chatRoom.name,
+          description: chatRoom.description,
+          createdBy: {
+            name: chatRoom.createdBy.name,
+            image: chatRoom.createdBy.image,
+          },
+        },
+      });
+      setIsFavorited(prev => !prev);
+    }
+  };
+
+  // ---------- Render -------------------------------------------------------- //
 
   return (
     <div
@@ -37,7 +96,10 @@ export default function MessageHeader({ onChange }) {
         <Row>
           <Col>
             <h2 style={{ display: 'flex', alignItems: 'center' }}>
-              {isPrivateChatRoom ? <FaLock /> : <FaLockOpen />} {chatRoomName} <MdFavoriteBorder />
+              {isPrivateChatRoom ? <FaLock /> : <FaLockOpen />} {chatRoom?.name}{' '}
+              <span style={{ cursor: 'pointer' }} onClick={handleFavorite}>
+                {isFavorited ? <MdFavorite /> : <MdFavoriteBorder />}
+              </span>
             </h2>
           </Col>
           <Col>
