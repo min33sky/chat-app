@@ -35,7 +35,6 @@ export default function DirectMessages() {
     if (currentUser) {
       addUsersListener(currentUser.uid);
     }
-    console.log('Direct Messages Rendered');
   }, [currentUser, users.length]); // ? 유저 수의 변동에 따라 리랜더링
 
   // ------------------------------------------------------------------------------------ //
