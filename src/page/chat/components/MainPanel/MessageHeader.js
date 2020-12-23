@@ -6,7 +6,9 @@ import {
   Col,
   Container,
   FormControl,
+  Image,
   InputGroup,
+  Media,
   Row,
 } from 'react-bootstrap';
 import { FaLock, FaLockOpen } from 'react-icons/fa';
@@ -24,6 +26,7 @@ export default function MessageHeader({ onChange }) {
   const isPrivateChatRoom = useSelector(state => state.chatRoom.isPrivateChatRoom);
   const chatRoom = useSelector(state => state.chatRoom.currentChatRoom);
   const user = useSelector(state => state.auth.currentUser);
+  const userPosts = useSelector(state => state.chatRoom?.userPosts);
 
   const [isFavorited, setIsFavorited] = useState(false);
 
@@ -80,6 +83,27 @@ export default function MessageHeader({ onChange }) {
     }
   };
 
+  // 채팅창 메세지 개수 랜더링
+  const renderUserPosts = userPosts =>
+    Object.entries(userPosts)
+      .sort((a, b) => b[1].count - a[1].count)
+      .map(([key, val], i) => (
+        <Media key={key}>
+          <img
+            style={{ borderRadius: '25px' }}
+            width={48}
+            height={48}
+            className='mr-3'
+            src={val.image}
+            alt={val.name}
+          />
+          <Media.Body>
+            <h6>{key}</h6>
+            <p>{val.count} 개</p>
+          </Media.Body>
+        </Media>
+      ));
+
   // ---------- Render -------------------------------------------------------- //
 
   return (
@@ -121,7 +145,17 @@ export default function MessageHeader({ onChange }) {
 
         <Row>
           <Col md={{ span: 4, offset: 8 }}>
-            <p style={{ textAlign: 'end' }}>[icon] username</p>
+            <p style={{ textAlign: 'end' }}>
+              <Image
+                roundedCircle
+                width={40}
+                height={40}
+                className='mr-3'
+                src={user && user.photoURL}
+                alt={chatRoom && chatRoom.createdBy.name}
+              />
+              {chatRoom && chatRoom.createdBy.name}
+            </p>
           </Col>
         </Row>
 
@@ -135,7 +169,9 @@ export default function MessageHeader({ onChange }) {
                   </Accordion.Toggle>
                 </Card.Header>
                 <Accordion.Collapse eventKey='0'>
-                  <Card.Body style={{ padding: '1rem 1rem' }}>Hello! I'm the body</Card.Body>
+                  <Card.Body style={{ padding: '1rem 1rem' }}>
+                    {chatRoom && chatRoom.description}
+                  </Card.Body>
                 </Accordion.Collapse>
               </Card>
             </Accordion>
@@ -145,11 +181,11 @@ export default function MessageHeader({ onChange }) {
               <Card>
                 <Card.Header style={{ padding: '0 1rem' }}>
                   <Accordion.Toggle as={Button} variant='link' eventKey='0'>
-                    Count
+                    Message Count
                   </Accordion.Toggle>
                 </Card.Header>
                 <Accordion.Collapse eventKey='0'>
-                  <Card.Body>Hello! I'm the body</Card.Body>
+                  <Card.Body>{userPosts && renderUserPosts(userPosts)}</Card.Body>
                 </Accordion.Collapse>
               </Card>
             </Accordion>

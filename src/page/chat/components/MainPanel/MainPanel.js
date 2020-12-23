@@ -2,14 +2,17 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import MessageForm from './MessageForm';
 import MessageHeader from './MessageHeader';
 import firebase from './../../../../firebase';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Message from './Message';
 import { MessagesContainer } from './../../style/MessagesContainer';
+import { Actions } from '../../state';
 
 /**
- * 채팅 메인 화면
+ * 채팅창 메인 화면
  */
 export default function MainPanel() {
+  const dispatch = useDispatch();
+
   const messageRef = useRef(null);
   messageRef.current = firebase.database().ref('messages');
 
@@ -17,19 +20,42 @@ export default function MainPanel() {
   const chatRoom = useSelector(state => state.chatRoom.currentChatRoom);
   const user = useSelector(state => state.auth.currentUser);
 
-  // ? 옵져버를 통해서 채팅 메세지 감시
-  const addMessageListeners = useCallback(id => {
-    let messagesArray = [];
-    setMessages([]); // 채팅방 이동시 상태값 초기화
-    messageRef.current.child(id).on('child_added', DataSnapshot => {
-      // console.log('메세지 불러오는 중...');
-      messagesArray.push(DataSnapshot.val());
-      // console.log('data :', DataSnapshot.val());
-      // console.log('array :', messagesArray);
+  // 게시물 분류 및 정렬 메서드
+  const userPostsCount = useCallback(
+    messages => {
+      let userPosts = messages.reduce((acc, message) => {
+        if (message.user.name in acc) {
+          acc[message.user.name].count += 1;
+        } else {
+          acc[message.user.name] = {
+            image: message.user.image,
+            count: 1,
+          };
+        }
+        return acc;
+      }, {});
+      dispatch(Actions.setUserPosts(userPosts));
+    },
+    [dispatch],
+  );
 
-      setMessages(prev => [...messagesArray]);
-    });
-  }, []);
+  //? 옵져버를 통해서 채팅 메세지 감시
+  const addMessageListeners = useCallback(
+    id => {
+      let messagesArray = [];
+      setMessages([]); //? 채팅방 이동시 상태값 초기화
+      messageRef.current.child(id).on('child_added', DataSnapshot => {
+        messagesArray.push(DataSnapshot.val());
+        // console.log('data :', DataSnapshot.val());
+        // console.log('array :', messagesArray);
+
+        // setMessages(prev => [...messagesArray]);
+        setMessages([...messagesArray]);
+        userPostsCount(messagesArray);
+      });
+    },
+    [userPostsCount],
+  );
 
   useEffect(() => {
     if (chatRoom) {
