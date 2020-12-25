@@ -144,19 +144,24 @@ export default function MessageHeader({ onChange }) {
         </Row>
 
         <Row>
-          <Col md={{ span: 4, offset: 8 }}>
-            <p style={{ textAlign: 'end' }}>
-              <Image
-                roundedCircle
-                width={40}
-                height={40}
-                className='mr-3'
-                src={user && user.photoURL}
-                alt={chatRoom && chatRoom.createdBy.name}
-              />
-              {chatRoom && chatRoom.createdBy.name}
-            </p>
-          </Col>
+          {
+            //? 공개방 일때만  방장 정보를 보여준다.
+            !isPrivateChatRoom && (
+              <Col md={{ span: 4, offset: 8 }}>
+                <p style={{ textAlign: 'end' }}>
+                  <Image
+                    roundedCircle
+                    width={40}
+                    height={40}
+                    className='mr-3'
+                    src={user && user.photoURL}
+                    alt={chatRoom && chatRoom.createdBy.name}
+                  />
+                  {chatRoom && chatRoom.createdBy.name}
+                </p>
+              </Col>
+            )
+          }
         </Row>
 
         <Row>
