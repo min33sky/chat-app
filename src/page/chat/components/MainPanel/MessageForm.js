@@ -4,6 +4,13 @@ import { useSelector } from 'react-redux';
 import { Button } from '../../style/Button';
 import firebase from './../../../../firebase';
 
+const messagesRef = firebase.database().ref('messages'); // firebase DB의 messages 컬렉션
+const typingRef = firebase.database().ref('typing'); // firebase DB의 typing 컬렉션
+const storageRef = firebase.storage().ref(); // firebase Storage
+
+/**
+ * 메세지 폼 컴포넌트
+ */
 export default function MessageForm() {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
@@ -11,21 +18,31 @@ export default function MessageForm() {
 
   const chatRoomId = useSelector(state => state.chatRoom.currentChatRoom?.id);
   const isPrivateChatRoom = useSelector(state => state.chatRoom?.isPrivateChatRoom);
+
   const uid = useSelector(state => state.auth.currentUser?.uid);
   const displayName = useSelector(state => state.auth.currentUser?.displayName);
   const photoURL = useSelector(state => state.auth.currentUser?.photoURL);
 
   const [percentage, setPercentage] = useState(0); // 이미지 전송 상태
 
-  const inputOpenImageRef = useRef(null); // 이미지 업로드 버튼 Ref
+  const inputOpenImageRef = useRef(null); // 이미지 업로드 버튼을 누르기 위한 Ref
 
-  const messagesRef = firebase.database().ref('messages'); // firebase DB의 messages 컬렉션
-  const storageRef = firebase.storage().ref(); // firebase Storage
+  // ---------- Event Handler -------------------------------------------------------------- //
 
-  const handleChange = e => {
-    setContent(e.target.value);
+  const handleChange = e => setContent(e.target.value);
+
+  // 메세지를 입력중일 때 상대방에게 보여주기 위한 처리
+  const handleKeyDown = e => {
+    if (e.ctrlKey && e.key === 'Enter') handleSubmit();
+
+    if (content) {
+      typingRef.child(chatRoomId).child(uid).set(displayName);
+    } else {
+      typingRef.child(chatRoomId).child(uid).remove();
+    }
   };
 
+  // DB에 저장할 메세지 형태를 생성하는 메서드
   const createMessage = (fileURL = null) => {
     const message = {
       timestamp: firebase.database.ServerValue.TIMESTAMP,
@@ -45,16 +62,18 @@ export default function MessageForm() {
     return message;
   };
 
+  // 메세지 전송
   const handleSubmit = async () => {
     if (!content) {
       setErrors(prev => [...prev, '메세지를 입력하세요!']);
       return;
     }
+
     setLoading(true);
 
     try {
       await messagesRef.child(chatRoomId).push().set(createMessage());
-
+      typingRef.child(chatRoomId).child(uid).remove();
       setErrors([]);
       setContent('');
       setLoading(false);
@@ -66,12 +85,8 @@ export default function MessageForm() {
     }
   };
 
-  // 업로드 버튼 클릭 핸들러
-  const handleUploadImageButton = () => {
-    if (inputOpenImageRef) {
-      inputOpenImageRef.current.click();
-    }
-  };
+  // 이미지 업로드 버튼 클릭 핸들러
+  const handleUploadImageButton = () => inputOpenImageRef && inputOpenImageRef.current.click();
 
   const getPath = () => {
     return isPrivateChatRoom ? `/message/private/${chatRoomId}` : '/message/public';
@@ -123,11 +138,20 @@ export default function MessageForm() {
     }
   };
 
+  // ---------- Render ----------------------------------------------------------------- //
+
   return (
     <>
       <Form onSubmit={handleSubmit}>
         <Form.Group controlId='exampleForm.ControlTextarea1'>
-          <Form.Control as='textarea' rows={3} value={content} onChange={handleChange} />
+          <Form.Control
+            as='textarea'
+            rows={3}
+            value={content}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            placeholder='단축키 Ctrl+Enter로 전송할 수 있습니다.'
+          />
         </Form.Group>
       </Form>
 

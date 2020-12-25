@@ -7,8 +7,11 @@ import Message from './Message';
 import { MessagesContainer } from './../../style/MessagesContainer';
 import { Actions } from '../../state';
 
+const typingRef = firebase.database().ref('typing');
+
 /**
  * 채팅창 메인 화면
+ * TODO: 로그아웃때 지랄남
  */
 export default function MainPanel() {
   const dispatch = useDispatch();
@@ -19,6 +22,8 @@ export default function MainPanel() {
   const [messages, setMessages] = useState([]);
   const chatRoom = useSelector(state => state.chatRoom.currentChatRoom);
   const user = useSelector(state => state.auth.currentUser);
+
+  const [typingUsers, setTypingUsers] = useState([]);
 
   // 게시물 분류 및 정렬 메서드
   const userPostsCount = useCallback(
@@ -46,10 +51,6 @@ export default function MainPanel() {
       setMessages([]); //? 채팅방 이동시 상태값 초기화
       messageRef.current.child(id).on('child_added', DataSnapshot => {
         messagesArray.push(DataSnapshot.val());
-        // console.log('data :', DataSnapshot.val());
-        // console.log('array :', messagesArray);
-
-        // setMessages(prev => [...messagesArray]);
         setMessages([...messagesArray]);
         userPostsCount(messagesArray);
       });
@@ -57,11 +58,23 @@ export default function MainPanel() {
     [userPostsCount],
   );
 
+  // 채팅방 타이핑 리스너
+  const addTypingListeners = useCallback(chatRoomId => {
+    typingRef.child(chatRoomId).on('value', DataSnapshot => {
+      if (DataSnapshot.val()) {
+        const typing = Object.entries(DataSnapshot.val());
+        const result = typing.map(item => ({ id: item[0], name: item[1] }));
+        setTypingUsers(result);
+      }
+    });
+  }, []);
+
   useEffect(() => {
     if (chatRoom) {
       addMessageListeners(chatRoom.id);
+      addTypingListeners(chatRoom.id);
     }
-  }, [messages.length, chatRoom, addMessageListeners]);
+  }, [messages.length, chatRoom, addMessageListeners, addTypingListeners]);
 
   // ---------- 검색어 관련 ---------------------------------------------------------- //
 
