@@ -59,15 +59,23 @@ export default function MainPanel() {
   );
 
   // 채팅방 타이핑 리스너
-  const addTypingListeners = useCallback(chatRoomId => {
-    typingRef.child(chatRoomId).on('value', DataSnapshot => {
-      if (DataSnapshot.val()) {
-        const typing = Object.entries(DataSnapshot.val());
-        const result = typing.map(item => ({ id: item[0], name: item[1] }));
-        setTypingUsers(result);
-      }
-    });
-  }, []);
+  const addTypingListeners = useCallback(
+    chatRoomId => {
+      typingRef.child(chatRoomId).on('value', DataSnapshot => {
+        if (DataSnapshot.val()) {
+          const typing = Object.entries(DataSnapshot.val());
+          // 내 정보는 타이핑 상태값에 추가하지 않는다.
+          const result = typing
+            .filter(item => user.uid !== item[0])
+            .map(item => ({ id: item[0], name: item[1] }));
+          setTypingUsers(result);
+        } else {
+          setTypingUsers([]);
+        }
+      });
+    },
+    [user.uid],
+  );
 
   useEffect(() => {
     if (chatRoom) {
@@ -75,6 +83,15 @@ export default function MainPanel() {
       addTypingListeners(chatRoom.id);
     }
   }, [messages.length, chatRoom, addMessageListeners, addTypingListeners]);
+
+  useEffect(() => {
+    return () => {
+      console.log('타이핑 리스너 제거');
+      if (chatRoom) {
+        typingRef.child(chatRoom.id).off('value');
+      }
+    };
+  }, [chatRoom]);
 
   // ---------- 검색어 관련 ---------------------------------------------------------- //
 
@@ -121,6 +138,13 @@ export default function MainPanel() {
     messages.length > 0 &&
     messages.map(message => <Message key={message.timestamp} message={message} user={user} />);
 
+  const renderTypingUsers = () =>
+    typingUsers.length > 0
+      ? typingUsers.map(user => (
+          <span key={user.id}>{user.name}님이 채팅을 입력하고 있습니다.</span>
+        ))
+      : null;
+
   // ---------- Rendering ------------------------------------------------------------------- //
 
   return (
@@ -129,6 +153,7 @@ export default function MainPanel() {
 
       <MessagesContainer>
         {searchTerm ? renderMessages(searchResult) : renderMessages(messages)}
+        {renderTypingUsers()}
       </MessagesContainer>
 
       <MessageForm />
